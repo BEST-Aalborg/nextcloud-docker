@@ -29,15 +29,64 @@ server {
     # Prevent nginx HTTP Server Detection
     server_tokens off;
 
+<<<<<<< HEAD
     # HSTS settings
+=======
+    # Add headers to serve security related headers
+    # Before enabling Strict-Transport-Security headers please read into this
+    # topic first.
+    #add_header Strict-Transport-Security "max-age=15768000; includeSubDomains; preload;" always;
+    #
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     # WARNING: Only add the preload option once you read about
     # the consequences in https://hstspreload.org/. This option
     # will add the domain to a hardcoded list that is shipped
     # in all major browsers and getting removed from this list
     # could take several months.
+<<<<<<< HEAD
     add_header Strict-Transport-Security "max-age=15768000; includeSubDomains; preload;" always;
 
     # set max upload size and increase upload timeout:
+=======
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Download-Options "noopen" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+    add_header X-Robots-Tag "none" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Remove X-Powered-By, which is an information leak
+    fastcgi_hide_header X-Powered-By;
+
+    # Path to the root of your installation
+    root /var/www/html;
+
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    # The following 2 rules are only needed for the user_webfinger app.
+    # Uncomment it if you're planning to use this app.
+    #rewrite ^/.well-known/host-meta /public.php?service=host-meta last;
+    #rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json last;
+
+    # The following rule is only needed for the Social app.
+    # Uncomment it if you're planning to use this app.
+    #rewrite ^/.well-known/webfinger /public.php?service=webfinger last;
+
+    location = /.well-known/carddav {
+        return 301 $scheme://$host:$server_port/remote.php/dav;
+    }
+
+    location = /.well-known/caldav {
+        return 301 $scheme://$host:$server_port/remote.php/dav;
+    }
+
+    # set max upload size
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     client_max_body_size 10G;
     client_body_timeout 300s;
     fastcgi_buffers 64 4K;
@@ -54,6 +103,7 @@ server {
     # with the `ngx_pagespeed` module, uncomment this line to disable it.
     #pagespeed off;
 
+<<<<<<< HEAD
     # HTTP response headers borrowed from Nextcloud `.htaccess`
     add_header Referrer-Policy                      "no-referrer"   always;
     add_header X-Content-Type-Options               "nosniff"       always;
@@ -134,6 +184,33 @@ server {
 
         fastcgi_param modHeadersAvailable true;         # Avoid sending the security headers twice
         fastcgi_param front_controller_active true;     # Enable pretty urls
+=======
+    location / {
+        rewrite ^ /index.php;
+    }
+
+    location ~ ^\/(?:build|tests|config|lib|3rdparty|templates|data)\/ {
+        deny all;
+    }
+    location ~ ^\/(?:\.|autotest|occ|issue|indie|db_|console) {
+        deny all;
+    }
+
+    location ~ ^\/(?:index|remote|public|cron|core\/ajax\/update|status|ocs\/v[12]|updater\/.+|oc[ms]-provider\/.+)\.php(?:$|\/) {
+        fastcgi_split_path_info ^(.+?\.php)(\/.*|)$;
+        set $path_info $fastcgi_path_info;
+        try_files $fastcgi_script_name =404;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $path_info;
+        # fastcgi_param HTTPS on;
+
+        # Avoid sending the security headers twice
+        fastcgi_param modHeadersAvailable true;
+
+        # Enable pretty urls
+        fastcgi_param front_controller_active true;
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
         fastcgi_pass php-handler;
 
         fastcgi_intercept_errors on;
@@ -142,6 +219,7 @@ server {
         fastcgi_max_temp_file_size 0;
     }
 
+<<<<<<< HEAD
     location ~ \.(?:css|js|svg|gif|png|jpg|ico|wasm|tflite|map)$ {
         try_files $uri /index.php$request_uri;
         add_header Cache-Control "public, max-age=15778463, $asset_immutable";
@@ -153,6 +231,42 @@ server {
     }
 
     location ~ \.woff2?$ {
+=======
+    location ~ ^\/(?:updater|oc[ms]-provider)(?:$|\/) {
+        try_files $uri/ =404;
+        index index.php;
+    }
+
+    # Adding the cache control header for js, css and map files
+    # Make sure it is BELOW the PHP block
+    location ~ \.(?:css|js|woff2?|svg|gif|map)$ {
+        try_files $uri /index.php$request_uri;
+        add_header Cache-Control "public, max-age=15778463";
+        # Add headers to serve security related headers (It is intended to
+        # have those duplicated to the ones above)
+        # Before enabling Strict-Transport-Security headers please read into
+        # this topic first.
+        #add_header Strict-Transport-Security "max-age=15768000; includeSubDomains; preload;" always;
+        #
+        # WARNING: Only add the preload option once you read about
+        # the consequences in https://hstspreload.org/. This option
+        # will add the domain to a hardcoded list that is shipped
+        # in all major browsers and getting removed from this list
+        # could take several months.
+        add_header Referrer-Policy "no-referrer" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Download-Options "noopen" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Permitted-Cross-Domain-Policies "none" always;
+        add_header X-Robots-Tag "none" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+
+        # Optional: Don't log access to assets
+        access_log off;
+    }
+
+    location ~ \.(?:png|html|ttf|ico|jpg|jpeg|bcmap|mp4|webm)$ {
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
         try_files $uri /index.php$request_uri;
         expires 7d;         # Cache-Control policy borrowed from `.htaccess`
         access_log off;     # Optional: Don't log access to assets

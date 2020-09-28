@@ -1,5 +1,9 @@
 [Unit]
+<<<<<<< HEAD
 Description=Nextcloud - Main Service
+=======
+Description=Service for Nextcloud
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
 After=docker.service
 
 

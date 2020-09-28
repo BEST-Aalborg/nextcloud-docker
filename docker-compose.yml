@@ -12,16 +12,24 @@ services:
       --skip-innodb-read-only-compressed
       --skip-name-resolve
     restart: always
+<<<<<<< HEAD
 
+=======
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     volumes:
       - db:/var/lib/mysql
+    env_file:
+      - .env
 
+<<<<<<< HEAD
     environment:
       MYSQL_DATABASE: "${MYSQL_DATABASE}"
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
 
+=======
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
   redis:
     image: redis
     restart: always
@@ -34,12 +42,16 @@ services:
         IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
 
     restart: always
+<<<<<<< HEAD
 
+=======
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     volumes:
       - nextcloud:/var/www/html
       - apps:/var/www/html/custom_apps
       - config:/var/www/html/config
       - data:/var/www/html/data
+<<<<<<< HEAD
 
     environment:
       MYSQL_HOST: db
@@ -55,6 +67,14 @@ services:
       - db
       - redis
 
+=======
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
   nginx:
     image: dvaerum/nginx-with-certbot-in-docker:latest
     restart: always
@@ -74,15 +94,24 @@ services:
       - data:/var/www/html/data
 
     environment:
+<<<<<<< HEAD
       DOMAINS: "${DOMAINS}"
       NGINX_LOG_ACCESS: "${NGINX_LOG_ACCESS}"
       NGINX_LOG_ERROR: "${NGINX_LOG_ERROR}"
       PLUGIN_SSL_DISABLE_HEADER: "${PLUGIN_SSL_DISABLE_HEADER}"
       DEBUG_BASH: "${DEBUG_BASH}"
 
+=======
+      - DOMAINS=nextcloud.best.aau.dk,collabora.best.aau.dk,onlyoffice.best.aau.dk
+      - NGINX_LOG_ACCESS=N
+      - NGINX_LOG_ERROR=Y
+      - PLUGIN_SSL_DISABLE_HEADER=Strict-Transport-Security X-Frame-Options Content-Security-Policy
+#      - DEBUG_BASH=1
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     depends_on:
       - app
 
+<<<<<<< HEAD
     ### NOTES for labels: ###
     # These labels are used to configure the container Traefik (https://doc.traefik.io/traefik/).
     # Traefik is used as our LB (Load Balander) for handling incoming connection and forward them
@@ -129,6 +158,22 @@ services:
   onlyoffice:
     ### READ The onlyoffice/Dockerfile for more info!
     build: ./build/onlyoffice
+=======
+  collabora:
+    image: collabora/code:latest
+    restart: unless-stopped
+    cap_add:
+      - MKNOD
+    environment:
+#      - DONT_GEN_SSL_CERT=1
+      - domain=nextcloud.best.aau.dk
+#      - server_name=collabora.best.aau.dk
+
+  onlyoffice:
+#    image: onlyoffice/documentserver:latest
+    ### READ The onlyoffice/Dockerfile for more info!
+    build: onlyoffice
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     restart: always
     stdin_open: true
     tty: true
@@ -146,11 +191,14 @@ services:
       args:
         IMAGE_TAG: "${ELASTIC_SEARCH_VERSION}"
     restart: always
+<<<<<<< HEAD
     environment:
       discovery.type: single-node
       # ES_JAVA_OPTS: -Xms1024m -Xmx1024m"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+=======
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
 
 volumes:
   nextcloud:
@@ -209,10 +257,13 @@ volumes:
       type: none
       device: /data/nextcloud/letsencrypt
 
+<<<<<<< HEAD
   elasticsearch_data:
     driver: local
     driver_opts:
       o: bind
       type: none
       device: /data/nextcloud/elasticsearch
+=======
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
 

@@ -1,4 +1,5 @@
 [Unit]
+<<<<<<< HEAD
 Description=Nextcloud - Preview Generator (all)
 After=nextcloud.service files-scan-all.service
 PartOf=nextcloud.service
@@ -12,6 +13,18 @@ ExecStart=/usr/bin/docker-compose exec -T --user www-data app php occ preview:ge
 
 Restart=on-failure
 RestartSec=6min
+=======
+Description=Preview Generator
+After=nextcloud.service files-scan-all.service
+PartOf=nextcloud.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/docker-compose exec -T --user www-data app php occ preview:generate-all
+
+Restart=on-failure
+RestartSec=5min
+>>>>>>> 467baad (A lot of changes, but mostly clean-ups)
 
 RemainAfterExit=yes
 
