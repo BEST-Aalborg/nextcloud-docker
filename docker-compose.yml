@@ -5,6 +5,12 @@ version: '3.5'
 services:
   db:
     image: mariadb:latest
+    command: >-
+      --transaction-isolation=READ-COMMITTED
+      --binlog-format=ROW
+      --innodb-file-per-table=1
+      --skip-innodb-read-only-compressed
+      --skip-name-resolve
     restart: always
     volumes:
       - db:/var/lib/mysql
