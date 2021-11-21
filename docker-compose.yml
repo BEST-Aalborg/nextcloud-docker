@@ -23,7 +23,7 @@ services:
     command: redis-server --requirepass "${REDIS_HOST_PASSWORD}"
 
   app:
-    build: 
+    build:
       context: ./app
       args:
         IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
@@ -38,7 +38,7 @@ services:
     depends_on:
       - db
       - redis
-      
+
   nginx:
     image: dvaerum/nginx-with-certbot-in-docker:latest
     restart: always
@@ -116,10 +116,17 @@ services:
     volumes:
       - document_data:/var/www/onlyoffice/Data
       - document_log:/var/log/onlyoffice
-      
+
   elasticsearch:
-    build: ./elasticsearch
+    build:
+      context: ./elasticsearch
+      args:
+        IMAGE_TAG: "${ELASTIC_SEARCH_VERSION}"
     restart: always
+    environment:
+      discovery.type: single-node
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
 
 volumes:
   nextcloud:
@@ -177,4 +184,11 @@ volumes:
       o: bind
       type: none
       device: /data/nextcloud/letsencrypt
+
+  elasticsearch_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /data/nextcloud/elasticsearch
 
