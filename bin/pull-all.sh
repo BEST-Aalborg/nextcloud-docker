@@ -45,7 +45,7 @@ get_next_major_release_number() {
         print "high minor relesae: bump";
       }
       else if (intermediate_release_detected == 1 && $2 > minium_next_intermediate_number) {
-        NRM=$1;
+        next_major_release=$1;
         print "high intermediate relesae: bump";
       }
     }
@@ -117,17 +117,17 @@ for file in $(find . -name Dockerfile); do
     fi
 
     if [ "${image}" == "elasticsearch" ]; then
-        if ! grep --quiet 'ELASTIC_SEARCH_VERSION' "${envirment_file}"; then
-            latest_tag="$(docker_tag "${image}" | grep '^[0-9]*' | sort -V | tail -n 1)"
+        _docker_tags=$(docker_tag "${image}" "^[0-9]*[.]")
 
-            _version=${latest_tag}
+        if ! grep --quiet 'ELASTIC_SEARCH_VERSION' "${envirment_file}"; then
+            _version="$(tail -n 1 <<<"${_docker_tags}")"
         else
             _version="$(sed -n 's/ELASTIC_SEARCH_VERSION=//p' "${envirment_file}")"
         fi
 
         # Check if we are far enough into the next major release to that we want to upgrade
-        _tmp_version="$(docker_tag "${image}" "^${_version%%.*}[.]")"
-        _version="$(tail -n 1 <<<"$_tmp_version" | tr -d '\n')"
+        _tmp_version="$(get_next_major_release_number "${_version%%.*}" <<<"${_docker_tags}")"
+        _version="$(grep "^$(tail -n 1 <<<"$_tmp_version" | tr -d '\n')\." <<<"${_docker_tags}" | tail -n 1)"
 
         image_and_tag="${image}:${_version}"
 
