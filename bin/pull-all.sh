@@ -12,8 +12,8 @@ TEST=${TEST:-}
 
 docker_tag() {
     image="$1"
-    filter="$2"
-    curl --silent https://registry.hub.docker.com/v1/repositories/${image}/tags | \
+    filter="${2:-}"
+    curl --silent --show-error https://registry.hub.docker.com/v1/repositories/${image}/tags | \
         jq -r ".[].name | select(. | test(\"${filter}\"))"
 }
 
@@ -31,9 +31,18 @@ for file in $(find . -name Dockerfile); do
     # This if statement in the script was created to re-create the functionality
     # there was previously provided by the production tag.
     if [ "${image}" == "nextcloud" ]; then
-        _branch=${tag##*-}
-        _version=${tag%-$_branch}
-        [ "${_version}" == production ] && _version=17
+        nextcloud_version_file=".env"
+
+        if ! grep --quiet 'NEXTCLOUD_VERSION' "${nextcloud_version_file}"; then
+            latest_major_tag="$(docker_tag "${image}" | grep '^[0-9]*-fpm$' | sort -V | tail -n 1)"
+
+            _branch=${latest_major_tag##*-}
+            _version=${latest_major_tag%-$_branch}
+        else
+            _version="$(sed -n 's/NEXTCLOUD_VERSION=//p' "${nextcloud_version_file}")"
+            _branch="$(sed -n 's/NEXTCLOUD_BRANCH=//p' "${nextcloud_version_file}")"
+            [ -z "${_branch}" ] && _branch="fpm"
+        fi
 
         # Check if we are far enough into the next major release to that we want to upgrade
         _check_new_version=$(expr ${_version} + 1)
@@ -43,9 +52,18 @@ for file in $(find . -name Dockerfile); do
 
         # Only pull new image if the envirement variable `TEST` is not set else `echo` the image
         if [ -z "${TEST}" ]; then
-            sed -Ei "s/^FROM[[:space:]].*/FROM ${image_and_tag}/" "${file}"
+            if grep --quiet 'NEXTCLOUD_VERSION' "${nextcloud_version_file}"; then
+                sed -i "s/NEXTCLOUD_VERSION=.*/NEXTCLOUD_VERSION=${_version}/" "${nextcloud_version_file}"
+            else
+                echo "NEXTCLOUD_VERSION=${_version}" >> "${nextcloud_version_file}"
+            fi
+            if grep --quiet 'NEXTCLOUD_BRANCH' "${nextcloud_version_file}"; then
+                sed -i "s/NEXTCLOUD_BRANCH=.*/NEXTCLOUD_BRANCH=${_branch}/" "${nextcloud_version_file}"
+            else
+                echo "NEXTCLOUD_BRANCH=${_branch}" >> "${nextcloud_version_file}"
+            fi
         else
-            echo "TEST: Set the new Nextcloud image to be '${image_and_tag}' in the file: ${file}"
+            echo "TEST: Set the new Nextcloud image to be '${image_and_tag}' in the file: ${nextcloud_version_file}"
         fi
     fi
 
@@ -58,5 +76,5 @@ for file in $(find . -name Dockerfile); do
 done
 
 # Only run if the envirement variable `TEST` is not set
-[ -z "${TEST}" ] && docker-compose -f ~/nextcloud/docker-compose.yml pull
+[ -z "${TEST}" ] && docker-compose -f docker-compose.yml pull
 

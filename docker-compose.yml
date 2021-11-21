@@ -23,7 +23,10 @@ services:
     command: redis-server --requirepass "${REDIS_HOST_PASSWORD}"
 
   app:
-    build: app
+    build: 
+      context: ./app
+      args:
+        IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
     restart: always
     volumes:
       - nextcloud:/var/www/html
@@ -56,7 +59,7 @@ services:
       - DOMAINS=nextcloud.best.aau.dk,collabora.best.aau.dk,onlyoffice.best.aau.dk
       - NGINX_LOG_ACCESS=N
       - NGINX_LOG_ERROR=Y
-      - PLUGIN_SSL_DISABLE_HEADER=Strict-Transport-Security X-Frame-Options Content-Security-Policy
+      - PLUGIN_SSL_DISABLE_HEADER=Strict-Transport-Security X-Frame-Options Content-Security-Policy X-Content-Type-Options
 #      - DEBUG_BASH=1
     depends_on:
       - app
@@ -105,9 +108,8 @@ services:
       - domain=nextcloud.best.aau.dk
 
   onlyoffice:
-#    image: onlyoffice/documentserver:latest
     ### READ The onlyoffice/Dockerfile for more info!
-    build: onlyoffice
+    build: ./onlyoffice
     restart: always
     stdin_open: true
     tty: true

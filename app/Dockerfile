@@ -1,4 +1,7 @@
-FROM nextcloud:20-fpm
+ARG IMAGE_TAG
+FROM nextcloud:${IMAGE_TAG}
+ARG IMAGE_TAG
+RUN echo "NextCloud tag: ${IMAGE_TAG}"
 
 RUN sed -i s/opcache.memory_consumption.*[0-9]*/opcache.memory_consumption=384/ /usr/local/etc/php/conf.d/opcache-recommended.ini
 
@@ -13,6 +16,14 @@ RUN sed -i 's/.*pm.max_requests.*/pm.max_requests = 500/' /usr/local/etc/php-fpm
 
 
 RUN echo "memory_limit=512M" > /usr/local/etc/php/php.ini
+
+### Installs the missing packages for php-imagick (SVG support)
+# Message in Security & setup warnings:
+#
+# Module php-imagick in this instance has no SVG support. For better compatibility it is recommended to install it
+RUN apt-get update && \
+    apt-get install --yes libmagickcore-6.q16-6-extra && \
+    rm -rf /var/lib/apt/lists/*
 
 ### Installs the missing packages for samba (Windows Share)
 #RUN apt-get update && \
