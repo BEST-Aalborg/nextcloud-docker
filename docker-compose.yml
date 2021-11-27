@@ -24,7 +24,7 @@ services:
 
   app:
     build:
-      context: ./app
+      context: ./build/app
       args:
         IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
     restart: always
@@ -109,7 +109,7 @@ services:
 
   onlyoffice:
     ### READ The onlyoffice/Dockerfile for more info!
-    build: ./onlyoffice
+    build: ./build/onlyoffice
     restart: always
     stdin_open: true
     tty: true
@@ -119,7 +119,7 @@ services:
 
   elasticsearch:
     build:
-      context: ./elasticsearch
+      context: ./build/elasticsearch
       args:
         IMAGE_TAG: "${ELASTIC_SEARCH_VERSION}"
     restart: always
