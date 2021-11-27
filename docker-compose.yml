@@ -208,8 +208,12 @@ services:
   onlyoffice:
 #    image: onlyoffice/documentserver:latest
     ### READ The onlyoffice/Dockerfile for more info!
+<<<<<<< HEAD
     build: onlyoffice
 >>>>>>> 467baad (A lot of changes, but mostly clean-ups)
+=======
+    build: ./build/onlyoffice
+>>>>>>> 37336fd (Moved container builds into the build folder)
     restart: always
     stdin_open: true
     tty: true

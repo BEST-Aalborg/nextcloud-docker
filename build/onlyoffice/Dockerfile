@@ -6,7 +6,7 @@ FROM onlyoffice/documentserver:latest
 # OnlyOffice removed the function to edit document in the web-browser on mobile platforms from there DocumentServer Community Edition
 # Source: https://help.nextcloud.com/t/onlyoffice-removed-web-mobile-editing-from-version-5-5-0-of-community-document-server/74360
 #
-# There exists a fix which is easy to implement and that is what this script does.
+# There exists a fix there is easy to implement and that is what this script does.
 # The fix is from the 23/03/2020 and I (Dennis) don't for how long it will work,
 # but if we no longer can edit document on our mobile devices in the web-browser when it probably stopped working
 # https://help.nextcloud.com/t/onlyoffice-removed-web-mobile-editing-from-version-5-5-0-of-community-document-server/74360/46
