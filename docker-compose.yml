@@ -14,8 +14,11 @@ services:
     restart: always
     volumes:
       - db:/var/lib/mysql
-    env_file:
-      - .env
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
 
   redis:
     image: redis
@@ -56,11 +59,11 @@ services:
       - config:/var/www/html/config
       - data:/var/www/html/data
     environment:
-      - DOMAINS=nextcloud.best.aau.dk,collabora.best.aau.dk,onlyoffice.best.aau.dk
-      - NGINX_LOG_ACCESS=N
-      - NGINX_LOG_ERROR=Y
-      - PLUGIN_SSL_DISABLE_HEADER=Strict-Transport-Security X-Frame-Options Content-Security-Policy X-Content-Type-Options
-#      - DEBUG_BASH=1
+      DOMAINS: "${DOMAINS}"
+      NGINX_LOG_ACCESS: "${NGINX_LOG_ACCESS}"
+      NGINX_LOG_ERROR: "${NGINX_LOG_ERROR}"
+      PLUGIN_SSL_DISABLE_HEADER: "${PLUGIN_SSL_DISABLE_HEADER}"
+      DEBUG_BASH: "${DEBUG_BASH}"
     depends_on:
       - app
 
@@ -97,7 +100,6 @@ services:
       - "traefik.tcp.routers.nextcloud_https.service=nextcloud_https"
       # This service defineds that we load balancer should farward connections to port 80
       - "traefik.tcp.services.nextcloud_https.loadbalancer.server.port=443"
-
 
   collabora:
     image: collabora/code:latest

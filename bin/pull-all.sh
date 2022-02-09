@@ -124,6 +124,7 @@ for file in $(find . -name Dockerfile); do
         else
             _version="$(sed -n 's/ELASTIC_SEARCH_VERSION=//p' "${envirment_file}")"
         fi
+        [ -z "${_version}" ] && _version="7.14.2"
 
         # Check if we are far enough into the next major release to that we want to upgrade
         _tmp_version="$(get_next_major_release_number "${_version%%.*}" <<<"${_docker_tags}")"
