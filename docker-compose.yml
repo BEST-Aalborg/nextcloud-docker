@@ -128,7 +128,7 @@ services:
     restart: always
     environment:
       discovery.type: single-node
-      ES_JAVA_OPTS: -Xms1024m -Xmx1024m"
+      # ES_JAVA_OPTS: -Xms1024m -Xmx1024m"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
 
