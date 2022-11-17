@@ -101,13 +101,14 @@ services:
       # This service defineds that we load balancer should farward connections to port 80
       - "traefik.tcp.services.nextcloud_https.loadbalancer.server.port=443"
 
-  collabora:
-    image: collabora/code:latest
-    restart: unless-stopped
-    cap_add:
-      - MKNOD
-    environment:
-      - domain=nextcloud.best.aau.dk
+#  collabora:
+#    image: collabora/code:latest
+#    restart: unless-stopped
+#    cap_add:
+#      - MKNOD
+#    environment:
+#      # domain: nextcloud.best.aau.dk
+#      aliasgroup1: "https://nextcloud\\.best\\.aau\\.dk,http://nextcloud\\.best\\.aau\\.dk,https://nextcloud\\.best\\.aau\\.dk:443,http://nextcloud\\.best\\.aau\\.dk:80"
 
   onlyoffice:
     ### READ The onlyoffice/Dockerfile for more info!
@@ -127,6 +128,7 @@ services:
     restart: always
     environment:
       discovery.type: single-node
+      ES_JAVA_OPTS: -Xms1024m -Xmx1024m"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
 

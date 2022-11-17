@@ -11,10 +11,17 @@ fi
 TEST=${TEST:-}
 
 docker_tag() {
-    image="$1"
-    filter="${2:-}"
-    curl --silent --show-error https://registry.hub.docker.com/v1/repositories/${image}/tags | \
-        jq -r ".[].name | select(. | test(\"${filter}\"))" | sort -V
+    local image="$1"
+    local filter="${2:-}"
+    local url="https://registry.hub.docker.com/v2/repositories/${image}/tags"
+
+    if [ "$(curl --silent --show-error --output /dev/null --write-out "%{http_code}\n" "${url}")" -eq "200" ]; then
+        curl --silent --show-error "${url}" | \
+            jq -r ".results[].name | select(. | test(\"${filter}\"))" | sort -V
+    else
+        >&2 echo "The docker_tag REST API call is broken and needs fixing"
+        exit 13
+    fi
 }
 
 get_next_major_release_number() {
@@ -82,7 +89,7 @@ for file in $(find . -name Dockerfile); do
     # https://softwareengineering.stackexchange.com/questions/3199/what-version-naming-convention-do-you-use/130903#130903
     if [ "${image}" == "nextcloud" ]; then
         if ! grep --quiet 'NEXTCLOUD_VERSION' "${envirment_file}"; then
-            latest_major_tag="$(docker_tag "${image}" | grep '^[0-9.]*-fpm$' | tail -n 1)"
+            latest_major_tag="$(docker_tag "library/${image}" | grep '^[0-9.]*-fpm$' | tail -n 1)"
 
             _branch=${latest_major_tag##*-}
             _version=${latest_major_tag%-$_branch}
@@ -93,7 +100,7 @@ for file in $(find . -name Dockerfile); do
         fi
 
         # Check if the next major release is mature enough to that we want to upgrade
-        _tmp_version="$(docker_tag "${image}" "^[0-9.]*-${_branch}$" | sed "s/-${_branch}//" | \
+        _tmp_version="$(docker_tag "library/${image}" "^[0-9.]*-${_branch}$" | sed "s/-${_branch}//" | \
         get_next_major_release_number "$_version" 5)"
         _version="$(tail -n 1 <<<"$_tmp_version" | tr -d '\n')"
 
@@ -117,7 +124,7 @@ for file in $(find . -name Dockerfile); do
     fi
 
     if [ "${image}" == "elasticsearch" ]; then
-        _docker_tags=$(docker_tag "${image}" "^[0-9]*[.]")
+        _docker_tags=$(docker_tag "library/${image}" "^[0-9]*[.]")
 
         if ! grep --quiet 'ELASTIC_SEARCH_VERSION' "${envirment_file}"; then
             _version="$(tail -n 1 <<<"${_docker_tags}")"
