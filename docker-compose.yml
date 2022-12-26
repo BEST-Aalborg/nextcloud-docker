@@ -12,8 +12,10 @@ services:
       --skip-innodb-read-only-compressed
       --skip-name-resolve
     restart: always
+
     volumes:
       - db:/var/lib/mysql
+
     environment:
       MYSQL_DATABASE: "${MYSQL_DATABASE}"
       MYSQL_USER: "${MYSQL_USER}"
@@ -30,14 +32,25 @@ services:
       context: ./build/app
       args:
         IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
+
     restart: always
+
     volumes:
       - nextcloud:/var/www/html
       - apps:/var/www/html/custom_apps
       - config:/var/www/html/config
       - data:/var/www/html/data
-    env_file:
-      - .env
+
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+
+      REDIS_HOST: redis
+      REDIS_HOST_POST: 6379
+      REDIS_HOST_PASSWORD: "${REDIS_HOST_PASSWORD}"
+
     depends_on:
       - db
       - redis
@@ -48,9 +61,10 @@ services:
     networks:
       default:
         aliases:
-          - nextcloud.best.aau.dk
-          - collabora.best.aau.dk
-          - onlyoffice.best.aau.dk
+          - "${DOMAIN_NEXTCLOUD}"
+          - "${DOMAIN_COLLABORA}"
+          - "${DOMAIN_ONLYOFFICE}"
+
     volumes:
       - ./sites-available:/etc/nginx/sites-available:ro
       - letsencrypt:/etc/letsencrypt
@@ -58,12 +72,14 @@ services:
       - apps:/var/www/html/custom_apps
       - config:/var/www/html/config
       - data:/var/www/html/data
+
     environment:
       DOMAINS: "${DOMAINS}"
       NGINX_LOG_ACCESS: "${NGINX_LOG_ACCESS}"
       NGINX_LOG_ERROR: "${NGINX_LOG_ERROR}"
       PLUGIN_SSL_DISABLE_HEADER: "${PLUGIN_SSL_DISABLE_HEADER}"
       DEBUG_BASH: "${DEBUG_BASH}"
+
     depends_on:
       - app
 
@@ -79,7 +95,7 @@ services:
       # is going to be on port 80 (HTTP).
       - "traefik.http.routers.nextcloud_http.entrypoints=web"
       # List of all the domains there will forwarded to this container
-      - "traefik.http.routers.nextcloud_http.rule=Host(`nextcloud.best.aau.dk`, `collabora.best.aau.dk`, `onlyoffice.best.aau.dk`)"
+      - "traefik.http.routers.nextcloud_http.rule=Host(`${DOMAIN_NEXTCLOUD}`, `${DOMAIN_COLLABORA}`, `${DOMAIN_ONLYOFFICE}`)"
       # In order to select which port on this container the connections from Traefik should be farwarded to,
       # there needs to be defined a service.
       - "traefik.http.routers.nextcloud_http.service=nextcloud_http"
@@ -90,7 +106,7 @@ services:
       # is going to be on port 443 (HTTPS).
       - "traefik.tcp.routers.nextcloud_https.entrypoints=websecure"
       # List of all the domains there will forwarded to this container
-      - "traefik.tcp.routers.nextcloud_https.rule=HostSNI(`nextcloud.best.aau.dk`, `collabora.best.aau.dk`, `onlyoffice.best.aau.dk`)"
+      - "traefik.tcp.routers.nextcloud_https.rule=HostSNI(`${DOMAIN_NEXTCLOUD}`, `${DOMAIN_COLLABORA}`, `${DOMAIN_ONLYOFFICE}`)"
       # By default traefik will handle the encryption of connections and just forward the connection unencrypted,
       # but if you instead just want Traefik to forward the encrypted connection to the container,
       # set `tls.passthrough` to `true`.
@@ -107,8 +123,8 @@ services:
 #    cap_add:
 #      - MKNOD
 #    environment:
-#      # domain: nextcloud.best.aau.dk
-#      aliasgroup1: "https://nextcloud\\.best\\.aau\\.dk,http://nextcloud\\.best\\.aau\\.dk,https://nextcloud\\.best\\.aau\\.dk:443,http://nextcloud\\.best\\.aau\\.dk:80"
+#      # domain: "${DOMAIN_NEXTCLOUD}"
+#      aliasgroup1: "https://${DOMAIN_NEXTCLOUD},http://${DOMAIN_NEXTCLOUD},https://${DOMAIN_NEXTCLOUD}:443,http://${DOMAIN_NEXTCLOUD}:80"
 
   onlyoffice:
     ### READ The onlyoffice/Dockerfile for more info!
@@ -116,6 +132,10 @@ services:
     restart: always
     stdin_open: true
     tty: true
+
+    environment:
+      JWT_ENABLED: "false"
+
     volumes:
       - document_data:/var/www/onlyoffice/Data
       - document_log:/var/log/onlyoffice

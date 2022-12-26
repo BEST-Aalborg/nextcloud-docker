@@ -71,7 +71,7 @@ for file in $(find . -name Dockerfile); do
     image_and_tag="$(sed -nE 's/FROM[[:space:]]+//p' "${file}")"
     tag="${image_and_tag##*:}"
     image="${image_and_tag%:$tag}"
-    envirment_file=".env"
+    envirment_file="config.env"
 
     ### Figure out when to switch/upgrade to the new version ###
     # Before version 18 it was possible to use the tag "production", but now that is only
