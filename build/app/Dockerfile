@@ -1,7 +1,7 @@
 ARG IMAGE_TAG
 FROM nextcloud:${IMAGE_TAG}
 ARG IMAGE_TAG
-RUN echo "NextCloud tag: ${IMAGE_TAG}"
+RUN echo "NextCloud tag: ${IMAGE_TAG}" | tee /tmp/IMAGE_TAG
 
 RUN sed -i s/opcache.memory_consumption.*[0-9]*/opcache.memory_consumption=384/ /usr/local/etc/php/conf.d/opcache-recommended.ini
 
