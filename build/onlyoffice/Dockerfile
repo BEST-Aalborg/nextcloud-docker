@@ -6,7 +6,7 @@ FROM onlyoffice/documentserver:latest
 # OnlyOffice removed the function to edit document in the web-browser on mobile platforms from there DocumentServer Community Edition
 # Source: https://help.nextcloud.com/t/onlyoffice-removed-web-mobile-editing-from-version-5-5-0-of-community-document-server/74360
 #
-# There exists a fix there is easy to implement and that is what this script does.
+# There exists a fix which is easy to implement and that is what this script does.
 # The fix is from the 23/03/2020 and I (Dennis) don't for how long it will work,
 # but if we no longer can edit document on our mobile devices in the web-browser when it probably stopped working
 # https://help.nextcloud.com/t/onlyoffice-removed-web-mobile-editing-from-version-5-5-0-of-community-document-server/74360/46
@@ -18,7 +18,7 @@ FROM onlyoffice/documentserver:latest
 # DocumentServer - https://github.com/ONLYOFFICE/DocumentServer.
 
 
-### Applying the patch ###
+### Applying the patch
 # by replace
 # isSupportEditFeature:function(){return!1}
 # with
@@ -29,4 +29,11 @@ FROM onlyoffice/documentserver:latest
 
 # Worked on the 21/11/2021 with version 6.4.0
 RUN find /var/www/onlyoffice/documentserver/web-apps/apps/*/mobile -name app.js | xargs -n 1 sed -i -E 's/isSupportEditFeature(.)function\(\)\{return!([0-1])\}/isSupportEditFeature\1function(){return \2}/'
+
+
+### Apply patch to fix bug
+# Source: https://github.com/ONLYOFFICE/DocumentServer/issues/2186
+
+# Worked on the 01/04/2023 with version 7.3.3.49
+RUN find /var/www/onlyoffice/documentserver -name sdk-all-min.js | xargs -n 1 sed -E -i 's|(function +\w+\(\w+\) *\{ *function +\w+\(\)) *\{ *(\w+)\.open\((\w+),(\w+),(\w+)\);|\1{\nif (\4 \&\& \4.length > 5) {if (\4.substring(0, 5) == "http:") {\4 = \4.replace("http://", "https://");}};\n\2.open(\3,\4,\5);\n|'
 

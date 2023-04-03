@@ -3,115 +3,139 @@
 version: '3.5'
 
 services:
+  ### Use for testing with CockroachDB, but currently blocked by bug
+  ### Source: https://help.nextcloud.com/t/any-luck-using-cockroachdb-with-nextcloud-in-docker/143409/2?u=dvaerum
+  # db:
+  #   image: cockroachdb/cockroach:latest
+  #   command: >-
+  #     start-single-node
+  #     --sql-addr :5432
+  #     --insecure
+  #     --vmodule=exec_log=2
+
+  #   # entrypoint: "bash -x cockroach.sh start-single-node --sql-addr :5432"
+  #   restart: always
+
+  #   volumes:
+  #     - database_data:/cockroach/cockroach-data
+  #     - ./extra-files/cockroachdb/init-scripts:/docker-entrypoint-initdb.d
+
+  #   environment:
+  #     COCKROACH_DATABASE: "${MYSQL_DATABASE}"
+  #     COCKROACH_USER: "${MYSQL_USER}"
+  #     COCKROACH_PASSWORD: "${MYSQL_PASSWORD}"
+
+
   db:
-    image: mariadb:latest
-    command: >-
-      --transaction-isolation=READ-COMMITTED
-      --binlog-format=ROW
-      --innodb-file-per-table=1
-      --skip-innodb-read-only-compressed
-      --skip-name-resolve
+    image: postgres:${DATABASE_POSTGRESQL_VERSION}
     restart: always
-<<<<<<< HEAD
 
-=======
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     volumes:
-      - db:/var/lib/mysql
-    env_file:
-      - .env
+      - database_postgresql:/var/lib/postgresql/data
 
-<<<<<<< HEAD
     environment:
-      MYSQL_DATABASE: "${MYSQL_DATABASE}"
-      MYSQL_USER: "${MYSQL_USER}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      POSTGRES_DB: "${DATABASE_NAME}"
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
 
-=======
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
+      PGDATA: "/var/lib/postgresql/data/${DATABASE_POSTGRESQL_VERSION}"
+
+
+#  db:
+#    image: mariadb:latest
+#    command: >-
+#      --transaction-isolation=READ-COMMITTED
+#      --binlog-format=ROW
+#      --innodb-file-per-table=1
+#      --skip-innodb-read-only-compressed
+#      --skip-name-resolve
+#    restart: always
+#
+#    volumes:
+#      - database_mysql:/var/lib/mysql
+#
+#    environment:
+#      MYSQL_DATABASE: "${DATABASE_NAME}"
+#      MYSQL_USER: "${DATABASE_USER}"
+#      MYSQL_PASSWORD: "${DATABASE_PASSWORD}"
+#      MYSQL_ROOT_PASSWORD: "${DATABASE_ROOT_PASSWORD}"
+
+
   redis:
     image: redis
     restart: always
     command: redis-server --requirepass "${REDIS_HOST_PASSWORD}"
+
 
   app:
     build:
       context: ./build/app
       args:
         IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
+        XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+
+    # entrypoint: /bin/sh -x /entrypoint.sh php-fpm
 
     restart: always
-<<<<<<< HEAD
-
-=======
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     volumes:
       - nextcloud:/var/www/html
-      - apps:/var/www/html/custom_apps
-      - config:/var/www/html/config
-      - data:/var/www/html/data
-<<<<<<< HEAD
+      - nextcloud_apps:/var/www/html/custom_apps
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_data:/var/www/html/data
 
     environment:
+      ### For testing with CockroachDB
+      # POSTGRES_HOST: db
+      # POSTGRES_DB: "${MYSQL_DATABASE}"
+      # POSTGRES_USER: "${MYSQL_USER}"
+      # POSTGRES_PASSWORD: "${MYSQL_PASSWORD}"
+
       MYSQL_HOST: db
-      MYSQL_USER: "${MYSQL_USER}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DATABASE_NAME}"
+      MYSQL_USER: "${DATABASE_USER}"
+      MYSQL_PASSWORD: "${DATABASE_PASSWORD}"
 
       REDIS_HOST: redis
       REDIS_HOST_POST: 6379
       REDIS_HOST_PASSWORD: "${REDIS_HOST_PASSWORD}"
 
+      NEXTCLOUD_ADMIN_USER: "${NEXTCLOUD_ADMIN_USERNAME}"
+      NEXTCLOUD_ADMIN_PASSWORD: "${NEXTCLOUD_ADMIN_PASSWORD}"
+
+      NEXTCLOUD_TRUSTED_DOMAINS: "${NEXTCLOUD_TRUSTED_DOMAINS}"
+      TRUSTED_PROXIES: "${NEXTCLOUD_TRUSTED_PROXIES}"
+
+      NC_default_phone_region: "${NC_DEFAULT_PHONE_REGION}"
+      NC_query_log_file: "${NC_QUERY_LOG_FILE:-}"
+
+      # TODO: Need to be removed?
+      # PHP_MEMORY_LIMIT: 512M
+      # PHP_UPLOAD_LIMIT: 512M
+
     depends_on:
       - db
       - redis
 
-=======
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-      
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
-  nginx:
-    image: dvaerum/nginx-with-certbot-in-docker:latest
+  app-nginx:
+    build:
+      context: ./build/nginx
+      dockerfile: Containerfile
+
     restart: always
+
     networks:
       default:
         aliases:
           - "${DOMAIN_NEXTCLOUD}"
-          - "${DOMAIN_COLLABORA}"
-          - "${DOMAIN_ONLYOFFICE}"
 
     volumes:
-      - ./sites-available:/etc/nginx/sites-available:ro
-      - letsencrypt:/etc/letsencrypt
       - nextcloud:/var/www/html
-      - apps:/var/www/html/custom_apps
-      - config:/var/www/html/config
-      - data:/var/www/html/data
+      - nextcloud_apps:/var/www/html/custom_apps
+      - nextcloud_config:/var/www/html/config
+      - nextcloud_data:/var/www/html/data
 
-    environment:
-<<<<<<< HEAD
-      DOMAINS: "${DOMAINS}"
-      NGINX_LOG_ACCESS: "${NGINX_LOG_ACCESS}"
-      NGINX_LOG_ERROR: "${NGINX_LOG_ERROR}"
-      PLUGIN_SSL_DISABLE_HEADER: "${PLUGIN_SSL_DISABLE_HEADER}"
-      DEBUG_BASH: "${DEBUG_BASH}"
-
-=======
-      - DOMAINS=nextcloud.best.aau.dk,collabora.best.aau.dk,onlyoffice.best.aau.dk
-      - NGINX_LOG_ACCESS=N
-      - NGINX_LOG_ERROR=Y
-      - PLUGIN_SSL_DISABLE_HEADER=Strict-Transport-Security X-Frame-Options Content-Security-Policy
-#      - DEBUG_BASH=1
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
     depends_on:
       - app
-<<<<<<< HEAD
-=======
 
     ### NOTES for labels: ###
     # These labels are used to configure the container Traefik (https://doc.traefik.io/traefik/).
@@ -121,109 +145,93 @@ services:
       # Enable this container to be load balancered by Traefik
       - "traefik.enable=true"
 
-      # Select the endpoint from Traefik there which is used from incoming connection. Normally the endpoint `web`
-      # is going to be on port 80 (HTTP).
+      # Create middleware for redirect all HTTP connections to HTTPS
+      - "traefik.http.middlewares.nextcloud_redirect_http2https.redirectscheme.scheme=https"
+      # Make the redirect permanent
+      - "traefik.http.middlewares.nextcloud_redirect_http2https.redirectscheme.permanent=true"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `web` is going to be on port 80 (HTTP).
       - "traefik.http.routers.nextcloud_http.entrypoints=web"
       # List of all the domains there will forwarded to this container
-      - "traefik.http.routers.nextcloud_http.rule=Host(`nextcloud.best.aau.dk`, `collabora.best.aau.dk`, `onlyoffice.best.aau.dk`)"
+      - "traefik.http.routers.nextcloud_http.rule=Host(`${DOMAIN_NEXTCLOUD}`)"
+      # Select the middleware from Traefik which is used for incoming connection.
+      - "traefik.http.routers.nextcloud_http.middlewares=nextcloud_redirect_http2https"
+
+      # Create middleware to replace the path for well-known requests
+      - "traefik.http.middlewares.nextcloud_known_dav.replacepathregex.regex=^/.well-known/(cal|card)dav"
+      - "traefik.http.middlewares.nextcloud_known_dav.replacepathregex.replacement=/remote.php/dav/"
+      - "traefik.http.middlewares.nextcloud_known_others.replacepathregex.regex=^/.well-known/(webfinger|nodeinfo)"
+      - "traefik.http.middlewares.nextcloud_known_others.replacepathregex.replacement=/index.php/.well-known/$$1"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `websecure` is going to be on port 443 (HTTPS).
+      - "traefik.http.routers.nextcloud_https.entrypoints=websecure"
+      # List of all the domains there will forwarded to this container
+      - "traefik.http.routers.nextcloud_https.rule=Host(`${DOMAIN_NEXTCLOUD}`)"
+      # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
+      - "traefik.http.routers.nextcloud_https.tls.certresolver=https_challenge_resolver"
+
       # In order to select which port on this container the connections from Traefik should be farwarded to,
       # there needs to be defined a service.
-      - "traefik.http.routers.nextcloud_http.service=nextcloud_http"
       # This service defineds that we load balancer should farward connections to port 80
-      - "traefik.http.services.nextcloud_http.loadbalancer.server.port=80"
+      - "traefik.http.services.nextcloud_https.loadbalancer.server.port=80"
+      # Select the middleware from Traefik which is used for incoming connection.
+      - "traefik.http.routers.nextcloud_https.middlewares=nextcloud_known_dav,nextcloud_known_others"
 
-      # Select the endpoint from Traefik there which is used from incoming connection. Normally the endpoint `websecure`
-      # is going to be on port 443 (HTTPS).
-      - "traefik.tcp.routers.nextcloud_https.entrypoints=websecure"
-      # List of all the domains there will forwarded to this container
-      - "traefik.tcp.routers.nextcloud_https.rule=HostSNI(`nextcloud.best.aau.dk`, `collabora.best.aau.dk`, `onlyoffice.best.aau.dk`)"
-      # By default traefik will handle the encryption of connections and just forward the connection unencrypted,
-      # but if you instead just want Traefik to forward the encrypted connection to the container,
-      # set `tls.passthrough` to `true`.
-      - "traefik.tcp.routers.nextcloud_https.tls.passthrough=true"
-      # To order to select which port on this container the connections from Traefik should be farwarded to,
-      # there needs to be defined a service.
-      - "traefik.tcp.routers.nextcloud_https.service=nextcloud_https"
-      # This service defineds that we load balancer should farward connections to port 80
-      - "traefik.tcp.services.nextcloud_https.loadbalancer.server.port=443"
-
->>>>>>> 2cb54f3 (Setup Nextcloud to use traefik)
-
-<<<<<<< HEAD
-    ### NOTES for labels: ###
-    # These labels are used to configure the container Traefik (https://doc.traefik.io/traefik/).
-    # Traefik is used as our LB (Load Balander) for handling incoming connection and forward them
-    # to the correct containers.
-    labels:
-      # Enable this container to be load balancered by Traefik
-      - "traefik.enable=true"
-
-      # Select the endpoint from Traefik there which is used from incoming connection. Normally the endpoint `web`
-      # is going to be on port 80 (HTTP).
-      - "traefik.http.routers.nextcloud_http.entrypoints=web"
-      # List of all the domains there will forwarded to this container
-      - "traefik.http.routers.nextcloud_http.rule=Host(`${DOMAIN_NEXTCLOUD}`, `${DOMAIN_COLLABORA}`, `${DOMAIN_ONLYOFFICE}`)"
-      # In order to select which port on this container the connections from Traefik should be farwarded to,
-      # there needs to be defined a service.
-      - "traefik.http.routers.nextcloud_http.service=nextcloud_http"
-      # This service defineds that we load balancer should farward connections to port 80
-      - "traefik.http.services.nextcloud_http.loadbalancer.server.port=80"
-
-      # Select the endpoint from Traefik there which is used from incoming connection. Normally the endpoint `websecure`
-      # is going to be on port 443 (HTTPS).
-      - "traefik.tcp.routers.nextcloud_https.entrypoints=websecure"
-      # List of all the domains there will forwarded to this container
-      - "traefik.tcp.routers.nextcloud_https.rule=HostSNI(`${DOMAIN_NEXTCLOUD}`, `${DOMAIN_COLLABORA}`, `${DOMAIN_ONLYOFFICE}`)"
-      # By default traefik will handle the encryption of connections and just forward the connection unencrypted,
-      # but if you instead just want Traefik to forward the encrypted connection to the container,
-      # set `tls.passthrough` to `true`.
-      - "traefik.tcp.routers.nextcloud_https.tls.passthrough=true"
-      # To order to select which port on this container the connections from Traefik should be farwarded to,
-      # there needs to be defined a service.
-      - "traefik.tcp.routers.nextcloud_https.service=nextcloud_https"
-      # This service defineds that we load balancer should farward connections to port 80
-      - "traefik.tcp.services.nextcloud_https.loadbalancer.server.port=443"
-
-#  collabora:
-#    image: collabora/code:latest
-#    restart: unless-stopped
-#    cap_add:
-#      - MKNOD
-#    environment:
-#      # domain: "${DOMAIN_NEXTCLOUD}"
-#      aliasgroup1: "https://${DOMAIN_NEXTCLOUD},http://${DOMAIN_NEXTCLOUD},https://${DOMAIN_NEXTCLOUD}:443,http://${DOMAIN_NEXTCLOUD}:80"
 
   onlyoffice:
     ### READ The onlyoffice/Dockerfile for more info!
     build: ./build/onlyoffice
-=======
-  collabora:
-    image: collabora/code:latest
-    restart: unless-stopped
-    cap_add:
-      - MKNOD
-    environment:
-      - domain=nextcloud.best.aau.dk
-
-  onlyoffice:
-#    image: onlyoffice/documentserver:latest
-    ### READ The onlyoffice/Dockerfile for more info!
-<<<<<<< HEAD
-    build: onlyoffice
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
-=======
-    build: ./build/onlyoffice
->>>>>>> 37336fd (Moved container builds into the build folder)
     restart: always
     stdin_open: true
     tty: true
+
+    networks:
+      default:
+        aliases:
+          - "${DOMAIN_ONLYOFFICE}"
 
     environment:
       JWT_ENABLED: "false"
 
     volumes:
-      - document_data:/var/www/onlyoffice/Data
-      - document_log:/var/log/onlyoffice
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_log:/var/log/onlyoffice
+
+    ### NOTES for labels:
+    # These labels are used to configure the container Traefik (https://doc.traefik.io/traefik/).
+    # Traefik is used as our LB (Load Balander) for handling incoming connection and forward them
+    # to the correct containers.
+    labels:
+      # Enable this container to be load balancered by Traefik
+      - "traefik.enable=true"
+
+      # Create middleware for redirect all HTTP connections to HTTPS
+      - "traefik.http.middlewares.onlyoffice_redirect_http2https.redirectscheme.scheme=https"
+      # Make the redirect permanent
+      - "traefik.http.middlewares.onlyoffice_redirect_http2https.redirectscheme.permanent=true"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `web` is going to be on port 80 (HTTP).
+      - "traefik.http.routers.onlyoffice_http.entrypoints=web"
+      # List of all the domains there will forwarded to this container
+      - "traefik.http.routers.onlyoffice_http.rule=Host(`${DOMAIN_ONLYOFFICE}`)"
+      # Select the middleware from Traefik which is used for incoming connection.
+      - "traefik.http.routers.onlyoffice_http.middlewares=onlyoffice_redirect_http2https"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `websecure` is going to be on port 443 (HTTPS).
+      - "traefik.http.routers.onlyoffice_https.entrypoints=websecure"
+      # List of all the domains there will forwarded to this container
+      - "traefik.http.routers.onlyoffice_https.rule=Host(`${DOMAIN_ONLYOFFICE}`)"
+      # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
+      - "traefik.http.routers.onlyoffice_https.tls.certresolver=https_challenge_resolver"
+      # In order to select which port on this container the connections from Traefik should be farwarded to,
+      # there needs to be defined a service.
+      # This service defineds that we load balancer should farward connections to port 80
+      - "traefik.http.services.onlyoffice_https.loadbalancer.server.port=80"
+
 
   elasticsearch:
     build:
@@ -231,14 +239,12 @@ services:
       args:
         IMAGE_TAG: "${ELASTIC_SEARCH_VERSION}"
     restart: always
-<<<<<<< HEAD
     environment:
       discovery.type: single-node
       # ES_JAVA_OPTS: -Xms1024m -Xmx1024m"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
-=======
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
+
 
 volumes:
   nextcloud:
@@ -246,67 +252,69 @@ volumes:
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/nextcloud
+      device: "${DATA_PATH:-./data}/nextcloud"
 
-  apps:
+
+  nextcloud_apps:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/apps
+      device: "${DATA_PATH:-./data}/nextcloud_apps"
 
-  config:
+
+  nextcloud_config:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/config
+      device: "${DATA_PATH:-./data}/nextcloud_config"
 
-  data:
+
+  nextcloud_data:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/data
+      device: "${DATA_PATH:-./data}/nextcloud_data"
 
-  db:
+
+#  database_mysql:
+#    driver: local
+#    driver_opts:
+#      o: bind
+#      type: none
+#      device: "${DATA_PATH:-./data}/database_data/mysql"
+
+        
+  database_postgresql:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/database
+      device: "${DATA_PATH:-./data}/database_data/postgresql"
 
-  document_data:
+
+  onlyoffice_data:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/doc_data
+      device: "${DATA_PATH:-./data}/onlyoffice_data"
 
-  document_log:
+
+  onlyoffice_log:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/doc_log
+      device: "${DATA_PATH:-./data}/onlyoffice_log"
 
-  letsencrypt:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: /data/nextcloud/letsencrypt
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   elasticsearch_data:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /data/nextcloud/elasticsearch
-=======
->>>>>>> 467baad (A lot of changes, but mostly clean-ups)
+      device: "${DATA_PATH:-./data}/elasticsearch_data"
 
-=======
->>>>>>> 2cb54f3 (Setup Nextcloud to use traefik)
