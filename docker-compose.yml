@@ -17,8 +17,8 @@ services:
   #   restart: always
 
   #   volumes:
-  #     - database_data:/cockroach/cockroach-data
   #     - ./extra-files/cockroachdb/init-scripts:/docker-entrypoint-initdb.d
+  #     - database_data:/cockroach/cockroach-data
 
   #   environment:
   #     COCKROACH_DATABASE: "${MYSQL_DATABASE}"
@@ -31,12 +31,17 @@ services:
     restart: always
 
     volumes:
+      - ./extra-files/postgresql/init-scripts:/docker-entrypoint-initdb.d
       - database_postgresql:/var/lib/postgresql/data
 
     environment:
-      POSTGRES_DB: "${DATABASE_NAME}"
-      POSTGRES_USER: "${DATABASE_USER}"
-      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "${DATABASE_ROOT_PASSWORD}"
+
+      POSTGRES_NEXTCLOUD_DB: "${DATABASE_NAME}"
+      POSTGRES_NEXTCLOUD_USER: "${DATABASE_USER}"
+      POSTGRES_NEXTCLOUD_PASSWORD: "${DATABASE_PASSWORD}"
 
       PGDATA: "/var/lib/postgresql/data/${DATABASE_POSTGRESQL_VERSION}"
 
@@ -84,16 +89,17 @@ services:
       - nextcloud_data:/var/www/html/data
 
     environment:
-      ### For testing with CockroachDB
-      # POSTGRES_HOST: db
-      # POSTGRES_DB: "${MYSQL_DATABASE}"
-      # POSTGRES_USER: "${MYSQL_USER}"
-      # POSTGRES_PASSWORD: "${MYSQL_PASSWORD}"
+      ### For using with PostgreSQL
+      POSTGRES_HOST: db
+      POSTGRES_DB: "${DATABASE_NAME}"
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
 
-      MYSQL_HOST: db
-      MYSQL_DATABASE: "${DATABASE_NAME}"
-      MYSQL_USER: "${DATABASE_USER}"
-      MYSQL_PASSWORD: "${DATABASE_PASSWORD}"
+      ### For using with MySQL/MariaDB
+      # MYSQL_HOST: db
+      # MYSQL_DATABASE: "${DATABASE_NAME}"
+      # MYSQL_USER: "${DATABASE_USER}"
+      # MYSQL_PASSWORD: "${DATABASE_PASSWORD}"
 
       REDIS_HOST: redis
       REDIS_HOST_POST: 6379
@@ -107,10 +113,6 @@ services:
 
       NC_default_phone_region: "${NC_DEFAULT_PHONE_REGION}"
       NC_query_log_file: "${NC_QUERY_LOG_FILE:-}"
-
-      # TODO: Need to be removed?
-      # PHP_MEMORY_LIMIT: 512M
-      # PHP_UPLOAD_LIMIT: 512M
 
     depends_on:
       - db

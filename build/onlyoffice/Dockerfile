@@ -1,7 +1,7 @@
 FROM onlyoffice/documentserver:latest
 
 ### Why is this needed? ###
-# Because OnlyOffice decited that since they had become official supported by Nextcloud it was time to remove simple free features :‘(
+# Because OnlyOffice decited that since they had become official supported by Nextcloud it was time to remove free features :‘(
 #
 # OnlyOffice removed the function to edit document in the web-browser on mobile platforms from there DocumentServer Community Edition
 # Source: https://help.nextcloud.com/t/onlyoffice-removed-web-mobile-editing-from-version-5-5-0-of-community-document-server/74360
