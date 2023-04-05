@@ -172,7 +172,7 @@ services:
       # List of all the domains there will forwarded to this container
       - "traefik.http.routers.nextcloud_https.rule=Host(`${DOMAIN_NEXTCLOUD}`)"
       # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
-      - "traefik.http.routers.nextcloud_https.tls.certresolver=https_challenge_resolver"
+      - "traefik.http.routers.nextcloud_https.tls.certresolver=http_challenge_resolver"
 
       # In order to select which port on this container the connections from Traefik should be farwarded to,
       # there needs to be defined a service.
@@ -228,7 +228,7 @@ services:
       # List of all the domains there will forwarded to this container
       - "traefik.http.routers.onlyoffice_https.rule=Host(`${DOMAIN_ONLYOFFICE}`)"
       # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
-      - "traefik.http.routers.onlyoffice_https.tls.certresolver=https_challenge_resolver"
+      - "traefik.http.routers.onlyoffice_https.tls.certresolver=http_challenge_resolver"
       # In order to select which port on this container the connections from Traefik should be farwarded to,
       # there needs to be defined a service.
       # This service defineds that we load balancer should farward connections to port 80
