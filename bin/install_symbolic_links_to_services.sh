@@ -13,14 +13,22 @@ mkdir -p ~/.config/systemd/user
 for file in ~/.config/systemd/user/*.service; do
   if [ -L "${file}" ]; then
     if [ ! -e "${file}" ]; then
-      rm "${file}"
+      rm --verbose "${file}"
     fi
   fi
 done
 
 for file in ${PWD}/systemd.service/*.service; do
   if [ -f "${file}" ] && [ ! -e ~/.config/systemd/user/$(basename "${file}") ]; then
-    ln -s "${file}" ~/.config/systemd/user/$(basename "${file}")
+    ln --verbose --symbolic "${file}" ~/.config/systemd/user/$(basename "${file}")
+  fi
+done
+
+for file in ${PWD}/systemd.service/*.disabled; do
+  file_name="$(basename "${file:-%.disabled}")"
+
+  if [ -e ~/.config/systemd/user/${file_name} ]; then
+    rm --verbose ~/.config/systemd/user/${file_name}
   fi
 done
 

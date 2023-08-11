@@ -38,9 +38,9 @@ post_nextcloud() {
         if [ -x "${file}" ]; then
           echo "## Running the post-script: $(basename "${file}")"
             if "${file}"; then
-                echo "# The post-script succeeded: $(basename "${file}")"
+                echo "## The post-script succeeded: $(basename "${file}")"
             else
-                echo "# The post-script FAILED:    $(basename "${file}")"
+                echo "## The post-script FAILED:    $(basename "${file}")"
             fi
         fi
     done

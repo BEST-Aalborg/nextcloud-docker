@@ -124,6 +124,7 @@ for file in $(find . -name Dockerfile); do
     fi
 
     if [ "${image}" == "elasticsearch" ]; then
+        exit
         _docker_tags=$(docker_tag "library/${image}" "^[0-9]*[.]")
 
         if ! grep --quiet 'ELASTIC_SEARCH_VERSION' "${envirment_file}"; then

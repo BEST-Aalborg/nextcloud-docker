@@ -1,4 +1,5 @@
-FROM onlyoffice/documentserver:latest
+# FROM onlyoffice/documentserver:latest
+FROM onlyoffice/documentserver:7.3
 
 ### Why is this needed? ###
 # Because OnlyOffice decited that since they had become official supported by Nextcloud it was time to remove free features :‘(

@@ -73,7 +73,7 @@ services:
 
 
   app:
-    build:
+    build: &service_app_build
       context: ./build/app
       args:
         IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
@@ -82,13 +82,13 @@ services:
     # entrypoint: /bin/sh -x /entrypoint.sh php-fpm
 
     restart: always
-    volumes:
+    volumes: &service_app_volumes
       - nextcloud:/var/www/html
       - nextcloud_apps:/var/www/html/custom_apps
       - nextcloud_config:/var/www/html/config
       - nextcloud_data:/var/www/html/data
 
-    environment:
+    environment: &service_app_environment
       ### For using with PostgreSQL
       POSTGRES_HOST: db
       POSTGRES_DB: "${DATABASE_NAME}"
@@ -117,6 +117,35 @@ services:
     depends_on:
       - db
       - redis
+
+  app-inner-services:
+    build: *service_app_build
+    user: www-data
+    entrypoint:
+      - "/usr/bin/env"
+      - "bash"
+      - "-c"
+      - >-
+        epoch=$$(date +%s);
+        touch_file_scan_path=files-scan-all.touch;
+        touch_preview_generate_path=preview-generate-all.touch;
+        [[ -f $$touch_file_scan_path ]]        || touch $$touch_file_scan_path;
+        [[ -f $$touch_preview_generate_path ]] || touch $$touch_preview_generate_path;
+        if [[ $$(( $$epoch - 3600 * 24 * 6 )) -gt $$(stat --format=%Y $$touch_file_scan_path) ]]; then
+          php occ files:scan --all && touch $$touch_file_scan_path;
+        fi;
+        if [[ $$(( $$epoch - 3600 * 24 * 6 )) -gt $$(stat --format=%Y $$touch_preview_generate_path) ]]; then
+          php occ preview:generate-all && touch $$touch_preview_generate_path;
+        fi;
+        while sleep 180; do
+          php cron.php;
+          php occ preview:pre-generate;
+        done;
+    restart: always
+    volumes: *service_app_volumes
+    environment: *service_app_environment
+    depends_on:
+      - app
 
   app-nginx:
     build:
@@ -243,6 +272,7 @@ services:
     restart: always
     environment:
       discovery.type: single-node
+      ELASTIC_PASSWORD: tester1212
       # ES_JAVA_OPTS: -Xms1024m -Xmx1024m"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
