@@ -5,6 +5,7 @@ version: '3.5'
 services:
   ### Use for testing with CockroachDB, but currently blocked by bug
   ### Source: https://help.nextcloud.com/t/any-luck-using-cockroachdb-with-nextcloud-in-docker/143409/2?u=dvaerum
+  ### Issue Tracker: https://github.com/cockroachdb/cockroach/issues/94897
   # db:
   #   image: cockroachdb/cockroach:latest
   #   command: >-
@@ -83,6 +84,9 @@ services:
 
     restart: always
     volumes: &service_app_volumes
+      - ./extra-files/nextcloud/post-installation:/docker-entrypoint-hooks.d/post-installation
+      - ./extra-files/nextcloud/post-upgrade:/docker-entrypoint-hooks.d/post-upgrade
+      - ./extra-files/nextcloud/before-starting:/docker-entrypoint-hooks.d/before-starting
       - nextcloud:/var/www/html
       - nextcloud_apps:/var/www/html/custom_apps
       - nextcloud_config:/var/www/html/config
@@ -113,6 +117,10 @@ services:
 
       NC_default_phone_region: "${NC_DEFAULT_PHONE_REGION}"
       NC_query_log_file: "${NC_QUERY_LOG_FILE:-}"
+
+      DOMAIN_NEXTCLOUD:  "${DOMAIN_NEXTCLOUD:-}"
+      DOMAIN_COLLABORA:  "${DOMAIN_COLLABORA:-}"
+      DOMAIN_ONLYOFFICE: "${DOMAIN_ONLYOFFICE:-}"
 
     depends_on:
       - db
@@ -256,6 +264,11 @@ services:
       - "traefik.http.routers.onlyoffice_https.entrypoints=websecure"
       # List of all the domains there will forwarded to this container
       - "traefik.http.routers.onlyoffice_https.rule=Host(`${DOMAIN_ONLYOFFICE}`)"
+
+      # Workaround a bug in OnlyOffice, see the issue tracker: https://github.com/ONLYOFFICE/DocumentServer/issues/2186
+      - "traefik.http.middlewares.onlyoffice_redirect_http2https_header.headers.contentSecurityPolicy=upgrade-insecure-requests"
+      - "traefik.http.routers.onlyoffice_https.middlewares=onlyoffice_redirect_http2https_header"
+
       # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
       - "traefik.http.routers.onlyoffice_https.tls.certresolver=http_challenge_resolver"
       # In order to select which port on this container the connections from Traefik should be farwarded to,
@@ -265,15 +278,20 @@ services:
 
 
   elasticsearch:
-    build:
-      context: ./build/elasticsearch
-      args:
-        IMAGE_TAG: "${ELASTIC_SEARCH_VERSION}"
+    image: elasticsearch:${ELASTIC_SEARCH_VERSION}
+#   build:
+#      context: ./build/elasticsearch
+#      args:
+#        IMAGE_TAG: "${ELASTIC_SEARCH_VERSION}"
     restart: always
     environment:
       discovery.type: single-node
-      ELASTIC_PASSWORD: tester1212
-      # ES_JAVA_OPTS: -Xms1024m -Xmx1024m"
+
+      xpack.security.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+
+      ES_JAVA_OPTS: "${ELASTIC_JAVA_OPTS:-}"
+
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
 

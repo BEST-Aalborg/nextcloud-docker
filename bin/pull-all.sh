@@ -68,7 +68,7 @@ get_next_major_release_number() {
 
 
 for file in $(find . -name Dockerfile); do
-    image_and_tag="$(sed -nE 's/FROM[[:space:]]+//p' "${file}")"
+    image_and_tag="$(sed -nE 's/^FROM[[:space:]]+//p' "${file}")"
     tag="${image_and_tag##*:}"
     image="${image_and_tag%:$tag}"
     envirment_file="config.env"
@@ -124,7 +124,6 @@ for file in $(find . -name Dockerfile); do
     fi
 
     if [ "${image}" == "elasticsearch" ]; then
-        exit
         _docker_tags=$(docker_tag "library/${image}" "^[0-9]*[.]")
 
         if ! grep --quiet 'ELASTIC_SEARCH_VERSION' "${envirment_file}"; then
@@ -161,5 +160,5 @@ for file in $(find . -name Dockerfile); do
 done
 
 # Only run if the envirement variable `TEST` is not set
-[ -z "${TEST}" ] && docker-compose -f docker-compose.yml pull
+[ -z "${TEST}" ] && docker-compose -f "${DOCKER_COMPOSE_FILE:-docker-compose.yml}" pull
 

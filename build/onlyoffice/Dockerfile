@@ -1,5 +1,4 @@
-# FROM onlyoffice/documentserver:latest
-FROM onlyoffice/documentserver:7.3
+FROM onlyoffice/documentserver:latest
 
 ### Why is this needed? ###
 # Because OnlyOffice decited that since they had become official supported by Nextcloud it was time to remove free features :‘(
@@ -32,9 +31,9 @@ FROM onlyoffice/documentserver:7.3
 RUN find /var/www/onlyoffice/documentserver/web-apps/apps/*/mobile -name app.js | xargs -n 1 sed -i -E 's/isSupportEditFeature(.)function\(\)\{return!([0-1])\}/isSupportEditFeature\1function(){return \2}/'
 
 
-### Apply patch to fix bug
-# Source: https://github.com/ONLYOFFICE/DocumentServer/issues/2186
 
-# Worked on the 01/04/2023 with version 7.3.3.49
-RUN find /var/www/onlyoffice/documentserver -name sdk-all-min.js | xargs -n 1 sed -E -i 's|(function +\w+\(\w+\) *\{ *function +\w+\(\)) *\{ *(\w+)\.open\((\w+),(\w+),(\w+)\);|\1{\nif (\4 \&\& \4.length > 5) {if (\4.substring(0, 5) == "http:") {\4 = \4.replace("http://", "https://");}};\n\2.open(\3,\4,\5);\n|'
+### Change config which cannot be adjusted with environment variables.
+# This is added to allow OnlyOffice to download documents of a Nextcloud with a private IP address
+# Source:  https://helpcenter.onlyoffice.com/installation/docs-developer-configuring.aspx#RequestFilteringAgent
+RUN sed -i -E 's|("allowPrivateIPAddress":) *false *,|\1 true,|' /etc/onlyoffice/documentserver/default.json
 
