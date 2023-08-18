@@ -116,6 +116,7 @@ services:
       TRUSTED_PROXIES: "${NEXTCLOUD_TRUSTED_PROXIES}"
 
       NC_default_phone_region: "${NC_DEFAULT_PHONE_REGION}"
+      NC_default_locale: "${NC_DEFAULT_LOCALE}"
       NC_query_log_file: "${NC_QUERY_LOG_FILE:-}"
 
       DOMAIN_NEXTCLOUD:  "${DOMAIN_NEXTCLOUD:-}"
