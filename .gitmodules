@@ -1,0 +1,3 @@
+[submodule "build/face-recognition-external-model"]
+	path = build/face-recognition-external-model
+	url = https://github.com/matiasdelellis/facerecognition-external-model.git

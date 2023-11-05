@@ -91,6 +91,8 @@ services:
       - nextcloud_apps:/var/www/html/custom_apps
       - nextcloud_config:/var/www/html/config
       - nextcloud_data:/var/www/html/data
+      - type: tmpfs
+        target: /tmp:exec
 
     environment: &service_app_environment
       ### For using with PostgreSQL
@@ -115,6 +117,8 @@ services:
       NEXTCLOUD_TRUSTED_DOMAINS: "${NEXTCLOUD_TRUSTED_DOMAINS}"
       TRUSTED_PROXIES: "${NEXTCLOUD_TRUSTED_PROXIES}"
 
+      PHP_MEMORY_LIMIT: "${NEXTCLOUD_PHP_MEMORY_LIMIT:-512M}"
+
       NC_default_phone_region: "${NC_DEFAULT_PHONE_REGION}"
       NC_default_locale: "${NC_DEFAULT_LOCALE}"
       NC_query_log_file: "${NC_QUERY_LOG_FILE:-}"
@@ -123,9 +127,12 @@ services:
       DOMAIN_COLLABORA:  "${DOMAIN_COLLABORA:-}"
       DOMAIN_ONLYOFFICE: "${DOMAIN_ONLYOFFICE:-}"
 
+      FACE_RECOGNITION_API_KEY: "${FACE_RECOGNITION_API_KEY:-super-secret}"
+
     depends_on:
       - db
       - redis
+
 
   app-inner-services:
     build: *service_app_build
@@ -155,6 +162,7 @@ services:
     environment: *service_app_environment
     depends_on:
       - app
+
 
   app-nginx:
     build:
@@ -295,6 +303,15 @@ services:
 
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+
+
+  face-recognition-external-model:
+    build:
+      context: ./build/face-recognition-external-model
+
+    environment:
+      FACE_MODEL: 4
+      API_KEY: "${FACE_RECOGNITION_API_KEY:-super-secret}"
 
 
 volumes:
