@@ -7,7 +7,7 @@ RUN curl \
         "https://raw.githubusercontent.com/nextcloud/docker/master/.examples/docker-compose/insecure/postgres/fpm/web/nginx.conf" \
   | sed -E \
         -e 's/(client_max_body_size) +[^;]+/\1 10G/' \
-        -e '/client_max_body_size/a \        client_body_timeout 300s;' \
+#        -e '/client_max_body_size/a \        client_body_timeout 300s;' \
         -e 's/#[ ]*(add_header)[ ]+(Strict-Transport-Security)/\1 \2/' \
   | tee /etc/nginx/nginx.conf
 
