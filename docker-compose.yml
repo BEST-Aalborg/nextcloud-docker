@@ -138,12 +138,10 @@ services:
         epoch=$$(date +%s);
         touch_file_scan_path=files-scan-all.touch;
         touch_preview_generate_path=preview-generate-all.touch;
-        [[ -f $$touch_file_scan_path ]]        || touch $$touch_file_scan_path;
-        [[ -f $$touch_preview_generate_path ]] || touch $$touch_preview_generate_path;
-        if [[ $$(( $$epoch - 3600 * 24 * 6 )) -gt $$(stat --format=%Y $$touch_file_scan_path) ]]; then
+        if [[ ! -f $$touch_file_scan_path ]]        || [[ $$(( $$epoch - 3600 * 24 * 6 )) -gt $$(stat --format=%Y $$touch_file_scan_path) ]]; then
           php occ files:scan --all && touch $$touch_file_scan_path;
         fi;
-        if [[ $$(( $$epoch - 3600 * 24 * 6 )) -gt $$(stat --format=%Y $$touch_preview_generate_path) ]]; then
+        if [[ ! -f $$touch_preview_generate_path ]] || [[ $$(( $$epoch - 3600 * 24 * 6 )) -gt $$(stat --format=%Y $$touch_preview_generate_path) ]]; then
           php occ preview:generate-all && touch $$touch_preview_generate_path;
         fi;
         while sleep 180; do
