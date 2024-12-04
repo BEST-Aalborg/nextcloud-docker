@@ -11,7 +11,7 @@ Type=notify
 ExecStartPre=/bin/bash bin/pull-all.sh
 ExecStart=/bin/bash bin/start_and_watch.sh
 
-ExecStop=/usr/bin/docker-compose stop
+ExecStop=/usr/bin/docker compose stop
 
 Restart=always
 RestartSec=5sec

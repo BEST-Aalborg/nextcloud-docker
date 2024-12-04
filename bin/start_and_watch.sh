@@ -47,7 +47,7 @@ post_nextcloud() {
 }
 
 
-/usr/bin/docker-compose -f "${DOCKER_COMPOSE_FILE}" up -d --build
+/usr/bin/docker compose -f "${DOCKER_COMPOSE_FILE}" up -d --build
 
 
 [ -n "${NOTIFY_SOCKET:-}" ] && systemd-notify --status="Waiting for Nextcloud to be ready"

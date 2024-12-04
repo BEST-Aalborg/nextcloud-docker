@@ -160,5 +160,5 @@ for file in $(find . -name Dockerfile); do
 done
 
 # Only run if the envirement variable `TEST` is not set
-[ -z "${TEST}" ] && docker-compose -f "${DOCKER_COMPOSE_FILE:-docker-compose.yml}" pull
+[ -z "${TEST}" ] && docker compose -f "${DOCKER_COMPOSE_FILE:-docker-compose.yml}" pull
 

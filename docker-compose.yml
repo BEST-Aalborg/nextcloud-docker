@@ -29,6 +29,7 @@ services:
 
   db:
     image: postgres:${DATABASE_POSTGRESQL_VERSION}
+    command: -c 'max_connections=200'
     restart: always
 
     volumes:
