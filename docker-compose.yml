@@ -1,7 +1,5 @@
 # ex: set tabstop=8 softtabstop=0 expandtab shiftwidth=2 smarttab:
 ---
-version: '3.5'
-
 services:
   ### Use for testing with CockroachDB, but currently blocked by bug
   ### Source: https://help.nextcloud.com/t/any-luck-using-cockroachdb-with-nextcloud-in-docker/143409/2?u=dvaerum
