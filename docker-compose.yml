@@ -122,6 +122,8 @@ services:
       DOMAIN_COLLABORA:  "${DOMAIN_COLLABORA:-}"
       DOMAIN_ONLYOFFICE: "${DOMAIN_ONLYOFFICE:-}"
 
+      WHITEBOARD_SERVER_JWT_SECRET_KEY: "${WHITEBOARD_SERVER_JWT_SECRET_KEY}"
+
     depends_on:
       - db
       - redis
@@ -292,6 +294,55 @@ services:
 
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+
+
+  whiteboard-server:
+    image: ghcr.io/nextcloud-releases/whiteboard:release
+    # ports:
+    #   - "3002:3002"
+    environment:
+      NEXTCLOUD_URL: "https://${DOMAIN_NEXTCLOUD}/"
+      JWT_SECRET_KEY: "${WHITEBOARD_SERVER_JWT_SECRET_KEY}"
+
+    ### NOTES for labels:
+    # These labels are used to configure the container Traefik (https://doc.traefik.io/traefik/).
+    # Traefik is used as our LB (Load Balander) for handling incoming connection and forward them
+    # to the correct containers.
+    labels:
+      # Enable this container to be load balancered by Traefik
+      - "traefik.enable=true"
+
+      # Create middleware for redirect all HTTP connections to HTTPS
+      - "traefik.http.middlewares.whiteboard_redirect_http2https.redirectscheme.scheme=https"
+      # Make the redirect permanent
+      - "traefik.http.middlewares.whiteboard_redirect_http2https.redirectscheme.permanent=true"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `web` is going to be on port 80 (HTTP).
+      - "traefik.http.routers.whiteboard_http.entrypoints=web"
+      # List of all the domains there will forwarded to this container
+      - "traefik.http.routers.whiteboard_http.rule=Host(`${DOMAIN_NEXTCLOUD}`) && PathPrefix(`/whiteboard/`)"
+      # Select the middleware from Traefik which is used for incoming connection.
+      - "traefik.http.routers.whiteboard_http.middlewares=whiteboard_redirect_http2https"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `websecure` is going to be on port 443 (HTTPS).
+      - "traefik.http.routers.whiteboard_https.entrypoints=websecure"
+      # List of all the domains there will forwarded to this container
+      - "traefik.http.routers.whiteboard_https.rule=Host(`${DOMAIN_NEXTCLOUD}`) && PathPrefix(`/whiteboard/`)"
+      # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
+      - "traefik.http.routers.whiteboard_https.tls.certresolver=http_challenge_resolver"
+
+      # Create middleware to replace the path for well-known requests
+      - "traefik.http.middlewares.whiteboard_path_remover.replacepathregex.regex=^/whiteboard/"
+      - "traefik.http.middlewares.whiteboard_path_remover.replacepathregex.replacement=/"
+
+      # In order to select which port on this container the connections from Traefik should be farwarded to,
+      # there needs to be defined a service.
+      # This service defineds that we load balancer should farward connections to port 80
+      - "traefik.http.services.whiteboard_https.loadbalancer.server.port=3002"
+      # Select the middleware from Traefik which is used for incoming connection.
+      - "traefik.http.routers.whiteboard_https.middlewares=whiteboard_path_remover"
 
 
 volumes:
