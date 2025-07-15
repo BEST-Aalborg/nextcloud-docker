@@ -24,11 +24,28 @@ FROM onlyoffice/documentserver:latest
 # with
 # isSupportEditFeature:function(){return 1}
 
-# Worked on the 23/03/2020 with version 5.5.0
+# Worked on the 2020-03-23 with version 5.5.0
 # RUN sed -i 's/isSupportEditFeature:function\(\)\{return!1\}/isSupportEditFeature:function(){return 1}/' -r /var/www/onlyoffice/documentserver/web-apps/apps/*/mobile/app.js
 
-# Worked on the 21/11/2021 with version 6.4.0
-RUN find /var/www/onlyoffice/documentserver/web-apps/apps/*/mobile -name app.js | xargs -n 1 sed -i -E 's/isSupportEditFeature(.)function\(\)\{return!([0-1])\}/isSupportEditFeature\1function(){return \2}/'
+# Worked on the 2021-11-21 with version 6.4.0
+# RUN find /var/www/onlyoffice/documentserver/web-apps/apps/*/mobile -name app.js | xargs -n 1 sed -i -E 's/isSupportEditFeature(.)function\(\)\{return!([0-1])\}/isSupportEditFeature\1function(){return \2}/g'
+
+# Worked on the 2025-07-10 with version 9.0.3.29
+# by replace
+# isSupportEditFeature=()=>!1
+# with
+# isSupportEditFeature=()=>1
+RUN find /var/www/onlyoffice/documentserver/web-apps/apps/*/mobile -name app.js | xargs -n 1 sed -i -E 's/isSupportEditFeature=\(\)=>!1/isSupportEditFeature=()=>1/g'
+
+
+
+# Alternative patch is use the desktop mode on mobile devices.
+# This can be accomplished by running the command
+# `sed -E 's:^([^/].*= *"mobile".*)$://\1:' ./custom_apps/onlyoffice/lib/Controller/EditorApiController.php`
+# to patch the Nextcloud OnlyOffice App, so that it never informs the OnlyOffice Community Server that
+# it is a mobile device which is connecting.
+# This is detected by checking the User-Agent header, so this can also be fixed by overwritting the User-Agent
+# header send the Nextcloud Server.
 
 
 
