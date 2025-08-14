@@ -8,7 +8,7 @@ if php occ 2>&1 | grep --quiet '^Nextcloud is not installed'; then
 fi
 
 
-echo "### Update all the in-app in Nextcloud ###"
+echo "### Config the Whiteboard application in Nextcloud ###"
 php occ config:app:set whiteboard collabBackendUrl --value="https://${DOMAIN_NEXTCLOUD}/whiteboard"
 php occ config:app:set whiteboard jwt_secret_key   --value="${WHITEBOARD_SERVER_JWT_SECRET_KEY}"
 
