@@ -301,6 +301,7 @@ services:
 
   whiteboard-server:
     image: ghcr.io/nextcloud-releases/whiteboard:release
+    restart: always
     # ports:
     #   - "3002:3002"
     environment:
@@ -324,7 +325,7 @@ services:
       # Normally the endpoint `web` is going to be on port 80 (HTTP).
       - "traefik.http.routers.whiteboard_http.entrypoints=web"
       # List of all the domains there will forwarded to this container
-      - "traefik.http.routers.whiteboard_http.rule=Host(`${DOMAIN_NEXTCLOUD}`) && PathPrefix(`/whiteboard/`)"
+      - "traefik.http.routers.whiteboard_http.rule=Host(`${DOMAIN_WHITEBOARD}`) && PathPrefix(`/whiteboard/`)"
       # Select the middleware from Traefik which is used for incoming connection.
       - "traefik.http.routers.whiteboard_http.middlewares=whiteboard_redirect_http2https"
 
@@ -332,7 +333,7 @@ services:
       # Normally the endpoint `websecure` is going to be on port 443 (HTTPS).
       - "traefik.http.routers.whiteboard_https.entrypoints=websecure"
       # List of all the domains there will forwarded to this container
-      - "traefik.http.routers.whiteboard_https.rule=Host(`${DOMAIN_NEXTCLOUD}`) && PathPrefix(`/whiteboard/`)"
+      - "traefik.http.routers.whiteboard_https.rule=Host(`${DOMAIN_WHITEBOARD}`) && PathPrefix(`/whiteboard/`)"
       # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
       - "traefik.http.routers.whiteboard_https.tls.certresolver=http_challenge_resolver"
 
