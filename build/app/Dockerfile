@@ -6,9 +6,9 @@ RUN echo "NextCloud tag: ${IMAGE_TAG}" | tee /tmp/IMAGE_TAG
 
 ### Tune PHP-FPM
 # Ref: https://docs.nextcloud.com/server/19/admin_manual/installation/server_tuning.html?highlight=memory%20limit#tune-php-fpm
-RUN sed -i 's/.*pm.max_children.*/pm.max_children = 300/'                         /usr/local/etc/php-fpm.d/www.conf \
- && sed -i 's/.*pm.start_servers.*/pm.start_servers = 18/'                        /usr/local/etc/php-fpm.d/www.conf \
- && sed -i 's/.*pm.min_spare_servers.*/pm.min_spare_servers = 18/'                /usr/local/etc/php-fpm.d/www.conf \
+RUN sed -i 's/.*pm.max_children.*/pm.max_children = 150/'                         /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/.*pm.start_servers.*/pm.start_servers = 16/'                        /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/.*pm.min_spare_servers.*/pm.min_spare_servers = 8/'                 /usr/local/etc/php-fpm.d/www.conf \
  && sed -i 's/.*pm.max_spare_servers.*/pm.max_spare_servers = 32/'                /usr/local/etc/php-fpm.d/www.conf \
  && sed -i 's/.*pm.process_idle_timeout.*/pm.process_idle_timeout = 30s/'         /usr/local/etc/php-fpm.d/www.conf \
  && sed -i 's/.*pm.max_requests.*/pm.max_requests = 500/'                         /usr/local/etc/php-fpm.d/www.conf \
