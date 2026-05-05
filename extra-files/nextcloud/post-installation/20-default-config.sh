@@ -11,6 +11,7 @@ include($config_file_path);
 
 $CONFIG['simpleSignUpLink.shown'] = false;
 $CONFIG['default_locale']         = 'da_DK';
+$CONFIG['dbpersistent']           = true;
 
 $new_config_file_content = '';
 $new_config_file_content .= "<?php\n";
