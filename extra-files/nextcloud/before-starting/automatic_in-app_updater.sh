@@ -9,6 +9,6 @@ fi
 
 
 echo "### Update all the in-app in Nextcloud ###"
-php occ app:update --all
+php occ app:update --all || true
 
 
