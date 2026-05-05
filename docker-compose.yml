@@ -156,6 +156,16 @@ services:
     depends_on:
       - app
 
+  nextcloud-logs:
+    image: alpine:latest
+    container_name: nextcloud-logs
+    restart: unless-stopped
+    command: ["tail", "-F", "/var/www/html/data/nextcloud.log"]
+    volumes: *service_app_volumes
+    labels:
+      - "crowdsec.enable=true"
+      - "crowdsec.labels.type=Nextcloud"
+
   app-nginx:
     build:
       context: ./build/nginx
@@ -219,7 +229,7 @@ services:
       # This service defineds that we load balancer should farward connections to port 80
       - "traefik.http.services.nextcloud_https.loadbalancer.server.port=80"
       # Select the middleware from Traefik which is used for incoming connection.
-      - "traefik.http.routers.nextcloud_https.middlewares=nextcloud_known_dav,nextcloud_known_others"
+      - "traefik.http.routers.nextcloud_https.middlewares=${TRAEFIK_MIDDLEWARES}nextcloud_known_dav,nextcloud_known_others"
 
 
   onlyoffice:
@@ -270,7 +280,7 @@ services:
 
       # Workaround a bug in OnlyOffice, see the issue tracker: https://github.com/ONLYOFFICE/DocumentServer/issues/2186
       - "traefik.http.middlewares.onlyoffice_redirect_http2https_header.headers.contentSecurityPolicy=upgrade-insecure-requests"
-      - "traefik.http.routers.onlyoffice_https.middlewares=onlyoffice_redirect_http2https_header"
+      - "traefik.http.routers.onlyoffice_https.middlewares=${TRAEFIK_MIDDLEWARES}onlyoffice_redirect_http2https_header"
 
       # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
       - "traefik.http.routers.onlyoffice_https.tls.certresolver=http_challenge_resolver"
@@ -346,7 +356,7 @@ services:
       # This service defineds that we load balancer should farward connections to port 80
       - "traefik.http.services.whiteboard_https.loadbalancer.server.port=3002"
       # Select the middleware from Traefik which is used for incoming connection.
-      - "traefik.http.routers.whiteboard_https.middlewares=whiteboard_path_remover"
+      - "traefik.http.routers.whiteboard_https.middlewares=${TRAEFIK_MIDDLEWARES}whiteboard_path_remover"
 
 
 volumes:
