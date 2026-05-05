@@ -199,10 +199,12 @@ services:
       - "traefik.http.routers.nextcloud_http.middlewares=nextcloud_redirect_http2https"
 
       # Create middleware to replace the path for well-known requests
-      - "traefik.http.middlewares.nextcloud_known_dav.replacepathregex.regex=^/.well-known/(cal|card)dav"
-      - "traefik.http.middlewares.nextcloud_known_dav.replacepathregex.replacement=/remote.php/dav/"
-      - "traefik.http.middlewares.nextcloud_known_others.replacepathregex.regex=^/.well-known/(webfinger|nodeinfo)"
-      - "traefik.http.middlewares.nextcloud_known_others.replacepathregex.replacement=/index.php/.well-known/$$1"
+      - "traefik.http.middlewares.nextcloud_known_dav.redirectregex.permanent=true"
+      - "traefik.http.middlewares.nextcloud_known_dav.redirectregex.regex=https://(.*)/.well-known/(?:cal|card)dav"
+      - "traefik.http.middlewares.nextcloud_known_dav.redirectregex.replacement=https://$${1}/remote.php/dav"
+      - "traefik.http.middlewares.nextcloud_known_others.redirectregex.permanent=true"
+      - "traefik.http.middlewares.nextcloud_known_others.redirectregex.regex=https://(.*)/.well-known/(webfinger|nodeinfo)"
+      - "traefik.http.middlewares.nextcloud_known_others.redirectregex.replacement=https://$${1}/index.php/.well-known/$${2}"
 
       # Select the endpoint from Traefik which is used for incoming connection.
       # Normally the endpoint `websecure` is going to be on port 443 (HTTPS).
