@@ -21,7 +21,7 @@ RUN sed -i 's/.*pm.max_children.*/pm.max_children = 300/'                       
 # Module php-imagick in this instance has no SVG support. For better compatibility it is recommended to install it
 RUN apt-get update \
  && apt-get install --yes \
-        libmagickcore-6.q16-6-extra \
+        $(apt-cache search libmagickcore | grep 'libmagickcore-.*-extra' | sed 's/ - .*//' | tr '\n' ' ') \
         ffmpeg \
  && rm -rf /var/lib/apt/lists/*
 
