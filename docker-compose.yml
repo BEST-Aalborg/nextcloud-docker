@@ -79,6 +79,16 @@ services:
         IMAGE_TAG: "${NEXTCLOUD_VERSION}-${NEXTCLOUD_BRANCH}"
         XDEBUG_MODE: "${XDEBUG_MODE:-off}"
 
+    extra_hosts:
+      # If this DNS (A) record is not spoofed it will not
+      # be possible for `talk-hpb` to connect to the traefik container.
+      # One could have solved this with firewall rules but this seems simpler.
+      #
+      # Note: The better solution would have been if talk-hpb worked like
+      #       Collabora & OnlyOffice with an option for configuring an
+      #       internal request url
+      - "${DOMAIN_TALK}=${NETWORK_INTERFACE_IPv4}"
+
     # entrypoint: /bin/sh -x /entrypoint.sh php-fpm
 
     restart: always
@@ -357,6 +367,68 @@ services:
       - "traefik.http.services.whiteboard_https.loadbalancer.server.port=3002"
       # Select the middleware from Traefik which is used for incoming connection.
       - "traefik.http.routers.whiteboard_https.middlewares=${TRAEFIK_MIDDLEWARES}whiteboard_path_remover"
+
+
+  talk-hpb:
+    image: ghcr.io/nextcloud-releases/aio-talk:latest
+    restart: always
+    environment:
+      NC_DOMAIN: "${DOMAIN_NEXTCLOUD}"
+      TALK_HOST: "${DOMAIN_TALK}"
+      TALK_PORT: "${NEXTCLOUD_TALK_HPB_PORT}"
+      TURN_SECRET: "${NEXTCLOUD_TALK_HPB_TURN_SECRET}"
+      SIGNALING_SECRET: "${NEXTCLOUD_TALK_HPB_SIGNALING_SECRET}"
+      INTERNAL_SECRET: "${NEXTCLOUD_TALK_HPB_INTERNAL_SECRET}"
+
+    extra_hosts:
+      # If this DNS (A) record is not spoofed it will not
+      # be possible for `talk-hpb` to connect to the traefik container.
+      # One could have solved this with firewall rules but this seems simpler.
+      #
+      # Note: The better solution would have been if talk-hpb worked like
+      #       Collabora & OnlyOffice with an option for configuring an
+      #       internal request url
+      - "${DOMAIN_NEXTCLOUD}=${NETWORK_INTERFACE_IPv4}"
+
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+
+    labels:
+      # Enable this container to be load balancered by Traefik
+      - "traefik.enable=true"
+
+      # Create middleware for redirect all HTTP connections to HTTPS
+      - "traefik.http.middlewares.talk_redirect_http2https.redirectscheme.scheme=https"
+      # Make the redirect permanent
+      - "traefik.http.middlewares.talk_redirect_http2https.redirectscheme.permanent=true"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `web` is going to be on port 80 (HTTP).
+      - "traefik.http.routers.talk_http.entrypoints=web"
+      # List of all the domains there will forwarded to this container
+      - "traefik.http.routers.talk_http.rule=Host(`${DOMAIN_TALK}`) && PathPrefix(`/standalone-signaling/`)"
+      # Select the middleware from Traefik which is used for incoming connection.
+      - "traefik.http.routers.talk_http.middlewares=talk_redirect_http2https"
+
+      # Select the endpoint from Traefik which is used for incoming connection.
+      # Normally the endpoint `websecure` is going to be on port 443 (HTTPS).
+      - "traefik.http.routers.talk_https.entrypoints=websecure"
+      # List of all the domains there will forwarded to this container
+      - "traefik.http.routers.talk_https.rule=Host(`${DOMAIN_TALK}`) && PathPrefix(`/standalone-signaling/`)"
+      # Get SSL/TLS certificate from Let's Encrypt by resolving the HTTPS challenge.
+      - "traefik.http.routers.talk_https.tls.certresolver=http_challenge_resolver"
+
+      # Create middleware to replace the path for well-known requests
+      - "traefik.http.middlewares.talk_path_remover.replacepathregex.regex=^/standalone-signaling/"
+      - "traefik.http.middlewares.talk_path_remover.replacepathregex.replacement=/"
+
+      # In order to select which port on this container the connections from Traefik should be farwarded to,
+      # there needs to be defined a service.
+      # This service defineds that we load balancer should farward connections to port 80
+      - "traefik.http.services.talk_https.loadbalancer.server.port=8081"
+      # Select the middleware from Traefik which is used for incoming connection.
+      - "traefik.http.routers.talk_https.middlewares=${TRAEFIK_MIDDLEWARES}talk_path_remover"
 
 
 volumes:

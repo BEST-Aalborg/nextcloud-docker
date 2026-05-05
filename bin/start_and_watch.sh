@@ -26,6 +26,23 @@ _stop() {
 trap _stop SIGINT 
 
 
+set_update_config_with_net_int_ip() {
+    CONFIG_FILE="config.env"
+
+    regex_net_int_name="^NETWORK_INTERFACE_NAME=[^ ]+$"
+    regex_net_int_ipv4="^(NETWORK_INTERFACE_IPv4=).*"
+
+    int_name="$(grep --extended-regexp "${regex_net_int_name}" "${CONFIG_FILE}" | cut -f2 -d=)"
+    int_ipv4="$(ip --json address show dev "${int_name}" | jq -r '.[] | .addr_info[] | select(.family == "inet") | .local')"
+
+    if ! grep --quiet --extended-regexp "${regex_net_int_ipv4}" "${CONFIG_FILE}"; then
+        echo "NETWORK_INTERFACE_IPv4=" >> "${CONFIG_FILE}"
+    fi
+
+    sed -i -E "s/${regex_net_int_ipv4}/\1${int_ipv4}/" "${CONFIG_FILE}"
+}
+
+
 post_nextcloud() {
     dir="post.d"
     if [ -d "${dir}" ]; then
@@ -46,6 +63,7 @@ post_nextcloud() {
     done
 }
 
+set_update_config_with_net_int_ip
 
 /usr/bin/docker compose -f "${DOCKER_COMPOSE_FILE}" up -d --build
 
