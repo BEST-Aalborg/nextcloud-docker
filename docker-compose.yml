@@ -183,11 +183,6 @@ services:
 
     restart: always
 
-    networks:
-      default:
-        aliases:
-          - "${DOMAIN_NEXTCLOUD}"
-
     volumes:
       - nextcloud:/var/www/html
       - nextcloud_apps:/var/www/html/custom_apps
@@ -471,7 +466,6 @@ volumes:
 #      type: none
 #      device: "${DATA_PATH:-./data}/database_data/mysql"
 
-        
   database_postgresql:
     driver: local
     driver_opts:
