@@ -148,6 +148,7 @@ services:
         while sleep 180; do
           php cron.php;
           php occ preview:pre-generate;
+          [[ -n "$$(php occ config:app:get -- onlyoffice settings_error | tr -d '\n')" ]] && php occ config:app:set --value "" -- onlyoffice settings_error;
         done;
     restart: always
     volumes: *service_app_volumes
